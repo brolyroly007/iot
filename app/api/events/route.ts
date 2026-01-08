@@ -19,35 +19,21 @@ export async function GET() {
       process.env.SUPABASE_ANON_KEY
     )
 
-    // Primero probar count
-    const { count, error: countError } = await supabase
-      .from('events')
-      .select('*', { count: 'exact', head: true })
-
     const { data: events, error } = await supabase
       .from('events')
       .select('*')
+      .order('fecha', { ascending: false })
+      .limit(50)
 
     if (error) {
       console.error('Error Supabase:', error)
-      return NextResponse.json({
-        success: false,
-        error: error.message,
-        code: error.code,
-        details: error.details
-      }, { status: 500 })
+      return NextResponse.json({ success: false, error: error.message }, { status: 500 })
     }
 
     return NextResponse.json({
       success: true,
       events: events || [],
-      total: events?.length || 0,
-      debug: {
-        url: process.env.SUPABASE_URL?.substring(0, 30) + '...',
-        hasKey: !!process.env.SUPABASE_ANON_KEY,
-        count: count,
-        countError: countError?.message
-      }
+      total: events?.length || 0
     })
   } catch (error) {
     console.error('Error:', error)
