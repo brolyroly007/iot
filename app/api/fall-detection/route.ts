@@ -1,16 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_ANON_KEY!
-)
+export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
 
-    // Guardar evento en Supabase
+    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
+      return NextResponse.json({
+        success: false,
+        error: 'Supabase not configured'
+      }, { status: 500 })
+    }
+
+    const supabase = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_ANON_KEY
+    )
+
     const { data: event, error } = await supabase
       .from('events')
       .insert({
