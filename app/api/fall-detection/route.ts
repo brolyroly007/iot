@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// Almacenamiento temporal en memoria (en produccion usar Supabase)
-let events: any[] = []
-let lastActivity = new Date().toISOString()
+// Almacenamiento en memoria (compartido globalmente)
+declare global {
+  var fallEvents: any[]
+  var lastActivity: string
+}
+
+if (!global.fallEvents) {
+  global.fallEvents = []
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,10 +24,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Guardar evento
-    events.unshift(event)
-    if (events.length > 100) events = events.slice(0, 100)
+    global.fallEvents.unshift(event)
+    if (global.fallEvents.length > 100) {
+      global.fallEvents = global.fallEvents.slice(0, 100)
+    }
 
-    lastActivity = new Date().toISOString()
+    global.lastActivity = new Date().toISOString()
 
     console.log('Evento recibido:', event)
 
@@ -65,7 +73,7 @@ async function sendNotifications(event: any) {
 
       for (const phone of phones) {
         await twilio.messages.create({
-          body: `🚨 ALERTA DE CAIDA!\n\nSe detecto una caida.\nMagnitud: ${event.magnitud}G\nDispositivo: ${event.dispositivo}\nFecha: ${event.fecha}\n\nVerifica el estado del adulto mayor inmediatamente.`,
+          body: `ALERTA DE CAIDA!\n\nSe detecto una caida.\nMagnitud: ${event.magnitud}G\nDispositivo: ${event.dispositivo}\nFecha: ${event.fecha}\n\nVerifica el estado del adulto mayor inmediatamente.`,
           from: `whatsapp:${process.env.TWILIO_WHATSAPP_FROM}`,
           to: `whatsapp:${phone}`
         })
@@ -91,10 +99,10 @@ async function sendNotifications(event: any) {
         await resend.emails.send({
           from: process.env.RESEND_FROM || 'onboarding@resend.dev',
           to: email,
-          subject: '🚨 ALERTA DE CAIDA DETECTADA',
+          subject: 'ALERTA DE CAIDA DETECTADA',
           html: `
             <div style="font-family: sans-serif; padding: 20px;">
-              <h1 style="color: #dc2626;">🚨 ALERTA DE CAIDA</h1>
+              <h1 style="color: #dc2626;">ALERTA DE CAIDA</h1>
               <p>Se ha detectado una posible caida.</p>
               <table style="margin: 20px 0;">
                 <tr><td><strong>Magnitud:</strong></td><td>${event.magnitud}G</td></tr>
@@ -114,6 +122,3 @@ async function sendNotifications(event: any) {
     }
   }
 }
-
-// Exportar events para otros endpoints
-export { events, lastActivity }

@@ -1,18 +1,20 @@
 import { NextResponse } from 'next/server'
 
-// Almacenamiento compartido
-let events: any[] = []
+// Almacenamiento en memoria (compartido globalmente)
+declare global {
+  var fallEvents: any[]
+}
 
-// Importar eventos del endpoint principal
+if (!global.fallEvents) {
+  global.fallEvents = []
+}
+
 export async function GET() {
   try {
-    // En produccion, obtener de Supabase
-    // Por ahora usamos almacenamiento en memoria
-
     return NextResponse.json({
       success: true,
-      events: events,
-      total: events.length
+      events: global.fallEvents,
+      total: global.fallEvents.length
     })
   } catch (error) {
     console.error('Error:', error)
@@ -22,13 +24,3 @@ export async function GET() {
     )
   }
 }
-
-// Funcion para agregar eventos (usada internamente)
-export function addEvent(event: any) {
-  events.unshift(event)
-  if (events.length > 100) {
-    events = events.slice(0, 100)
-  }
-}
-
-export { events }
