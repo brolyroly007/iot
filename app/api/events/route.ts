@@ -27,13 +27,22 @@ export async function GET() {
 
     if (error) {
       console.error('Error Supabase:', error)
-      return NextResponse.json({ success: false, error: error.message }, { status: 500 })
+      return NextResponse.json({
+        success: false,
+        error: error.message,
+        code: error.code,
+        details: error.details
+      }, { status: 500 })
     }
 
     return NextResponse.json({
       success: true,
       events: events || [],
-      total: events?.length || 0
+      total: events?.length || 0,
+      debug: {
+        url: process.env.SUPABASE_URL?.substring(0, 30) + '...',
+        hasKey: !!process.env.SUPABASE_ANON_KEY
+      }
     })
   } catch (error) {
     console.error('Error:', error)
