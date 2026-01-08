@@ -60,6 +60,14 @@ export default function Dashboard() {
     fetchEvents()
   }
 
+  const formatDate = (dateString: string) => {
+    try {
+      return new Date(dateString).toLocaleString('es-PE', { timeZone: 'America/Lima' })
+    } catch {
+      return dateString
+    }
+  }
+
   return (
     <div className="min-h-screen bg-neutral-50">
       {/* Header */}
@@ -122,7 +130,7 @@ export default function Dashboard() {
                       <p className="text-xs text-neutral-400">{event.magnitud}G</p>
                     </div>
                   </div>
-                  <p className="text-xs text-neutral-400">{event.fecha}</p>
+                  <p className="text-xs text-neutral-400">{formatDate(event.fecha)}</p>
                 </div>
               ))}
             </div>
