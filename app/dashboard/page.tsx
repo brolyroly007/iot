@@ -24,7 +24,7 @@ interface Dispositivo {
 export default function Dashboard() {
   const [events, setEvents] = useState<Event[]>([])
   const [dispositivos, setDispositivos] = useState<Dispositivo[]>([])
-  const [status, setStatus] = useState<'online' | 'offline'>('offline')
+  const [status, setStatus] = useState<'online' | 'offline'>('online')
   const [loading, setLoading] = useState(true)
   const [showAddDevice, setShowAddDevice] = useState(false)
   const [newDevice, setNewDevice] = useState({ nombre: '', ubicacion: '' })
@@ -34,6 +34,107 @@ export default function Dashboard() {
   const [currentTime, setCurrentTime] = useState(new Date())
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const prevEventsLength = useRef(0)
+
+  // Datos ficticios de demostración
+  const demoEvents: Event[] = [
+    {
+      id: 'demo-1',
+      tipo: 'caida',
+      magnitud: 3.8,
+      dispositivo: 'ESP32-CAM-001',
+      fecha: new Date(Date.now() - 1000 * 60 * 5).toISOString(), // Hace 5 min
+    },
+    {
+      id: 'demo-2',
+      tipo: 'test',
+      magnitud: 1.2,
+      dispositivo: 'ESP32-CAM-001',
+      fecha: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // Hace 30 min
+    },
+    {
+      id: 'demo-3',
+      tipo: 'caida',
+      magnitud: 4.1,
+      dispositivo: 'ESP32-CAM-002',
+      fecha: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // Hace 2 horas
+    },
+    {
+      id: 'demo-4',
+      tipo: 'test',
+      magnitud: 1.5,
+      dispositivo: 'ESP32-CAM-001',
+      fecha: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), // Hace 5 horas
+    },
+    {
+      id: 'demo-5',
+      tipo: 'caida',
+      magnitud: 3.2,
+      dispositivo: 'ESP32-CAM-002',
+      fecha: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString(), // Hace 8 horas
+    },
+    {
+      id: 'demo-6',
+      tipo: 'test',
+      magnitud: 1.8,
+      dispositivo: 'ESP32-CAM-001',
+      fecha: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(), // Hace 12 horas
+    },
+    {
+      id: 'demo-7',
+      tipo: 'caida',
+      magnitud: 2.9,
+      dispositivo: 'ESP32-CAM-003',
+      fecha: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // Hace 1 día
+    },
+    {
+      id: 'demo-8',
+      tipo: 'test',
+      magnitud: 1.4,
+      dispositivo: 'ESP32-CAM-002',
+      fecha: new Date(Date.now() - 1000 * 60 * 60 * 36).toISOString(), // Hace 1.5 días
+    },
+    {
+      id: 'demo-9',
+      tipo: 'caida',
+      magnitud: 3.5,
+      dispositivo: 'ESP32-CAM-001',
+      fecha: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(), // Hace 2 días
+    },
+    {
+      id: 'demo-10',
+      tipo: 'caida',
+      magnitud: 4.2,
+      dispositivo: 'ESP32-CAM-003',
+      fecha: new Date(Date.now() - 1000 * 60 * 60 * 72).toISOString(), // Hace 3 días
+    },
+  ]
+
+  const demoDispositivos: Dispositivo[] = [
+    {
+      id: 'demo-d1',
+      nombre: 'Detector Sala Principal',
+      codigo: 'FG-A1B2C3',
+      ubicacion: 'Sala de estar',
+      activo: true,
+      created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7).toISOString(),
+    },
+    {
+      id: 'demo-d2',
+      nombre: 'Detector Dormitorio',
+      codigo: 'FG-D4E5F6',
+      ubicacion: 'Habitación principal',
+      activo: true,
+      created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(),
+    },
+    {
+      id: 'demo-d3',
+      nombre: 'Detector Cocina',
+      codigo: 'FG-G7H8I9',
+      ubicacion: 'Cocina',
+      activo: false,
+      created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(),
+    },
+  ]
 
   useEffect(() => {
     fetchEvents()
@@ -74,9 +175,12 @@ export default function Dashboard() {
     try {
       const res = await fetch('/api/events')
       const data = await res.json()
-      setEvents(data.events || [])
+      const realEvents = data.events || []
+      // Combinar eventos reales con demo si no hay eventos reales
+      setEvents(realEvents.length > 0 ? realEvents : demoEvents)
     } catch (error) {
       console.error('Error:', error)
+      setEvents(demoEvents) // Usar demo si hay error
     }
   }
 
@@ -84,9 +188,12 @@ export default function Dashboard() {
     try {
       const res = await fetch('/api/dispositivos')
       const data = await res.json()
-      setDispositivos(data.dispositivos || [])
+      const realDispositivos = data.dispositivos || []
+      // Combinar dispositivos reales con demo si no hay dispositivos reales
+      setDispositivos(realDispositivos.length > 0 ? realDispositivos : demoDispositivos)
     } catch (error) {
       console.error('Error:', error)
+      setDispositivos(demoDispositivos) // Usar demo si hay error
     }
   }
 
