@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 interface Event {
@@ -23,14 +22,7 @@ interface Dispositivo {
   created_at: string
 }
 
-interface User {
-  id: string
-  email: string
-  nombre: string
-}
-
 export default function Dashboard() {
-  const [user, setUser] = useState<User | null>(null)
   const [events, setEvents] = useState<Event[]>([])
   const [dispositivos, setDispositivos] = useState<Dispositivo[]>([])
   const [status, setStatus] = useState<'online' | 'offline'>('offline')
@@ -42,24 +34,18 @@ export default function Dashboard() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const prevEventsLength = useRef(0)
-  const router = useRouter()
 
   useEffect(() => {
-    checkAuth()
-  }, [])
-
-  useEffect(() => {
-    if (user) {
+    fetchEvents()
+    fetchDispositivos()
+    fetchStatus()
+    setLoading(false)
+    const interval = setInterval(() => {
       fetchEvents()
-      fetchDispositivos()
       fetchStatus()
-      const interval = setInterval(() => {
-        fetchEvents()
-        fetchStatus()
-      }, 5000)
-      return () => clearInterval(interval)
-    }
-  }, [user])
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [])
 
   useEffect(() => {
     if (events.length > prevEventsLength.current && prevEventsLength.current > 0) {
@@ -74,22 +60,6 @@ export default function Dashboard() {
     }
     prevEventsLength.current = events.length
   }, [events])
-
-  const checkAuth = async () => {
-    try {
-      const res = await fetch('/api/auth/me')
-      const data = await res.json()
-      if (data.user) {
-        setUser(data.user)
-      } else {
-        router.push('/login')
-      }
-    } catch {
-      router.push('/login')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const fetchEvents = async () => {
     try {
@@ -119,11 +89,6 @@ export default function Dashboard() {
     } catch (error) {
       console.error('Error:', error)
     }
-  }
-
-  const handleLogout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' })
-    router.push('/login')
   }
 
   const handleAddDevice = async (e: React.FormEvent) => {
@@ -257,28 +222,13 @@ export default function Dashboard() {
             </div>
           </Link>
 
-          <div className="flex items-center gap-4">
-            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${
-              status === 'online'
-                ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                : 'bg-red-500/20 text-red-400 border border-red-500/30'
-            }`}>
-              <span className={`w-2 h-2 rounded-full ${status === 'online' ? 'bg-green-500' : 'bg-red-500'}`}></span>
-              {status === 'online' ? 'En línea' : 'Desconectado'}
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-slate-400 text-sm hidden sm:block">{user?.nombre || user?.email}</span>
-              <button
-                onClick={handleLogout}
-                className="p-2 text-slate-400 hover:text-white transition-colors"
-                title="Cerrar sesión"
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-              </button>
-            </div>
+          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${
+            status === 'online'
+              ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+              : 'bg-red-500/20 text-red-400 border border-red-500/30'
+          }`}>
+            <span className={`w-2 h-2 rounded-full ${status === 'online' ? 'bg-green-500' : 'bg-red-500'}`}></span>
+            {status === 'online' ? 'En línea' : 'Desconectado'}
           </div>
         </div>
       </header>

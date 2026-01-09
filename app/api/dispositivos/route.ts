@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
 import { createClient } from '@supabase/supabase-js'
 
 function generateCode(): string {
@@ -8,15 +7,6 @@ function generateCode(): string {
 
 export async function GET() {
   try {
-    const cookieStore = await cookies()
-    const sessionCookie = cookieStore.get('session')
-
-    if (!sessionCookie) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    }
-
-    const session = JSON.parse(sessionCookie.value)
-
     if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
       return NextResponse.json({ error: 'Servidor no configurado' }, { status: 500 })
     }
@@ -29,7 +19,6 @@ export async function GET() {
     const { data: dispositivos, error } = await supabase
       .from('dispositivos')
       .select('*')
-      .eq('user_id', session.user.id)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -44,14 +33,6 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = await cookies()
-    const sessionCookie = cookieStore.get('session')
-
-    if (!sessionCookie) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    }
-
-    const session = JSON.parse(sessionCookie.value)
     const { nombre, ubicacion } = await request.json()
 
     if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
@@ -68,7 +49,6 @@ export async function POST(request: NextRequest) {
     const { data: dispositivo, error } = await supabase
       .from('dispositivos')
       .insert({
-        user_id: session.user.id,
         nombre: nombre || 'Mi Dispositivo',
         codigo: codigo,
         ubicacion: ubicacion || ''
@@ -88,14 +68,6 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const cookieStore = await cookies()
-    const sessionCookie = cookieStore.get('session')
-
-    if (!sessionCookie) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    }
-
-    const session = JSON.parse(sessionCookie.value)
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
 
@@ -116,7 +88,6 @@ export async function DELETE(request: NextRequest) {
       .from('dispositivos')
       .delete()
       .eq('id', id)
-      .eq('user_id', session.user.id)
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })
